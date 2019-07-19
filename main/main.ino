@@ -33,6 +33,7 @@
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
   //Time used to wait for an interval before checking system measures
   unsigned long timer_sys_measures = 0;
+  bool taskInProgress = false;// this variable is used to trigger if a task is in progress to avoid concurrent tasks publishing or using network resources in the same time
 #else // boards with smaller memory
   #define array_size 4
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
@@ -889,10 +890,8 @@ void loop()
       PilighttoMQTT();
     #endif
     #ifdef ZgatewayBT
-        #if defined(ESP8266) || defined(ESP32)
-          if(BTtoMQTT())
-          trc(F("BTtoMQTT OK"));
-        #endif
+      if(BTtoMQTT())
+      trc(F("BTtoMQTT OK"));
     #endif
     #ifdef ZgatewaySRFB
       SRFBtoMQTT();
@@ -919,96 +918,100 @@ void loop()
 void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
-      timer_sys_measures = millis();
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& SYSdata = jsonBuffer.createObject();
-      trc(F("Uptime (s)"));    
-      unsigned long uptime = millis()/1000;
-      trc(uptime);
-      SYSdata["uptime"] = uptime;
-      #if defined(ESP8266) || defined(ESP32)
-        trc(F("Remaining memory"));
-        uint32_t freeMem;
-        freeMem = ESP.getFreeHeap();
-        SYSdata["freeMem"] = freeMem;
-        trc(freeMem);
-        trc(F("RSSI"));
-        long rssi = WiFi.RSSI();
-        SYSdata["rssi"] = rssi;
-        trc(rssi);
-        trc(F("SSID"));
-        String SSID = WiFi.SSID();
-        SYSdata["SSID"] = SSID;
-        trc(SSID);
-      #endif
-      trc(F("Activated modules"));
-      String modules = "";
-      #ifdef ZgatewayRF
-          modules = modules + ZgatewayRF;
-      #endif
-      #ifdef ZgatewayRF315
-          modules = modules + ZgatewayRF315;
-      #endif
-      #ifdef ZsensorBME280
-          modules = modules + ZsensorBME280;
-      #endif
-      #ifdef ZsensorBH1750
-          modules = modules + ZsensorBH1750;
-      #endif
-      #ifdef ZsensorTSL2561
-          modules = modules + ZsensorTSL2561;
-      #endif
-      #ifdef ZactuatorONOFF
-          modules = modules + ZactuatorONOFF;
-      #endif
-      #ifdef Zgateway2G
-          modules = modules + Zgateway2G;
-      #endif
-      #ifdef ZgatewayIR
-          modules = modules + ZgatewayIR;
-      #endif
-      #ifdef ZgatewayLORA
-          modules = modules + ZgatewayLORA;
-      #endif
-      #ifdef ZgatewayRF2
-          modules = modules + ZgatewayRF2;
-      #endif
-      #ifdef ZgatewayPilight
-          modules = modules  + ZgatewayPilight;
-      #endif
-      #ifdef ZgatewaySRFB
-          modules = modules + ZgatewaySRFB;
-      #endif
-      #ifdef ZgatewayBT
-          modules = modules + ZgatewayBT;
-      #endif
-      #ifdef ZgatewayRFM69
-          modules = modules + ZgatewayRFM69;
-      #endif
-      #ifdef ZsensorINA226
-          modules = modules + ZsensorINA226;
-      #endif
-      #ifdef ZsensorHCSR501
-          modules = modules + ZsensorHCSR501;
-      #endif
-      #ifdef ZsensorGPIOInput
-          modules = modules + ZsensorGPIOInput;
-      #endif
-      #ifdef ZsensorGPIOKeyCode
-          modules = modules + ZsensorGPIOKeyCode;
-      #endif
-      #ifdef ZsensorGPIOKeyCode
-          modules = modules  + ZsensorGPIOKeyCode;
-      #endif
-      #ifdef ZmqttDiscovery
-          modules = modules  + ZmqttDiscovery;
-          pubMqttDiscovery();
-      #endif
-      SYSdata["modules"] = modules;
-      trc(modules);
-      char JSONmessageBuffer[100];
-      SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      pub(subjectSYStoMQTT,JSONmessageBuffer);
+      if (!taskInProgress){
+        taskInProgress = true;
+        timer_sys_measures = millis();
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& SYSdata = jsonBuffer.createObject();
+        trc(F("Uptime (s)"));    
+        unsigned long uptime = millis()/1000;
+        trc(uptime);
+        SYSdata["uptime"] = uptime;
+        #if defined(ESP8266) || defined(ESP32)
+          trc(F("Remaining memory"));
+          uint32_t freeMem;
+          freeMem = ESP.getFreeHeap();
+          SYSdata["freeMem"] = freeMem;
+          trc(freeMem);
+          trc(F("RSSI"));
+          long rssi = WiFi.RSSI();
+          SYSdata["rssi"] = rssi;
+          trc(rssi);
+          trc(F("SSID"));
+          String SSID = WiFi.SSID();
+          SYSdata["SSID"] = SSID;
+          trc(SSID);
+        #endif
+        trc(F("Activated modules"));
+        String modules = "";
+        #ifdef ZgatewayRF
+            modules = modules + ZgatewayRF;
+        #endif
+        #ifdef ZgatewayRF315
+            modules = modules + ZgatewayRF315;
+        #endif
+        #ifdef ZsensorBME280
+            modules = modules + ZsensorBME280;
+        #endif
+        #ifdef ZsensorBH1750
+            modules = modules + ZsensorBH1750;
+        #endif
+        #ifdef ZsensorTSL2561
+            modules = modules + ZsensorTSL2561;
+        #endif
+        #ifdef ZactuatorONOFF
+            modules = modules + ZactuatorONOFF;
+        #endif
+        #ifdef Zgateway2G
+            modules = modules + Zgateway2G;
+        #endif
+        #ifdef ZgatewayIR
+            modules = modules + ZgatewayIR;
+        #endif
+        #ifdef ZgatewayLORA
+            modules = modules + ZgatewayLORA;
+        #endif
+        #ifdef ZgatewayRF2
+            modules = modules + ZgatewayRF2;
+        #endif
+        #ifdef ZgatewayPilight
+            modules = modules  + ZgatewayPilight;
+        #endif
+        #ifdef ZgatewaySRFB
+            modules = modules + ZgatewaySRFB;
+        #endif
+        #ifdef ZgatewayBT
+            modules = modules + ZgatewayBT;
+        #endif
+        #ifdef ZgatewayRFM69
+            modules = modules + ZgatewayRFM69;
+        #endif
+        #ifdef ZsensorINA226
+            modules = modules + ZsensorINA226;
+        #endif
+        #ifdef ZsensorHCSR501
+            modules = modules + ZsensorHCSR501;
+        #endif
+        #ifdef ZsensorGPIOInput
+            modules = modules + ZsensorGPIOInput;
+        #endif
+        #ifdef ZsensorGPIOKeyCode
+            modules = modules + ZsensorGPIOKeyCode;
+        #endif
+        #ifdef ZsensorGPIOKeyCode
+            modules = modules  + ZsensorGPIOKeyCode;
+        #endif
+        #ifdef ZmqttDiscovery
+            modules = modules  + ZmqttDiscovery;
+            pubMqttDiscovery();
+        #endif
+        SYSdata["modules"] = modules;
+        trc(modules);
+        char JSONmessageBuffer[100];
+        SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+        pub(subjectSYStoMQTT,JSONmessageBuffer);
+        taskInProgress = false;
+      }
     }
 }
 #endif

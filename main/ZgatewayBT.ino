@@ -10,7 +10,8 @@
  - publish MQTT data related to mi jia indoor temperature & humidity sensor
 
     Copyright: (c)Florian ROBERT
-  
+    Copyright: (c)Sven Henkel for Mi Flora Battery reading (https://github.com/sidddy/flora)
+
     This file is part of OpenMQTTGateway.
     
     OpenMQTTGateway is free software: you can redistribute it and/or modify
@@ -34,11 +35,11 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #include <vector>
 using namespace std;
-vector<BLEdevice> devices;
+vector<BLEdeviceDisc> devices;
 
 void setWorBMac(char * mac , bool isWhite){
   bool foundMac = false;
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         p->isWhtL = isWhite;
         p->isBlkL = !isWhite;
@@ -46,7 +47,7 @@ void setWorBMac(char * mac , bool isWhite){
     }
   }
   if (!foundMac) {
-    BLEdevice device;
+    BLEdeviceDisc device;
     strcpy( device.macAdr,mac );
     device.isDisc = false;
     device.isWhtL = isWhite;
@@ -56,14 +57,14 @@ void setWorBMac(char * mac , bool isWhite){
 }
 
 bool oneWhite(){
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
         if(p->isWhtL) return true;
   }
   return false;
 }
 
 bool isWhite(char * mac){
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isWhtL;
     }
@@ -72,7 +73,7 @@ bool isWhite(char * mac){
 }
 
 bool isBlack(char * mac){
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isBlkL;
     }
@@ -81,7 +82,7 @@ bool isBlack(char * mac){
 }
 
 bool isDiscovered(char * mac){
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isDisc;
     }
@@ -90,11 +91,13 @@ bool isDiscovered(char * mac){
 }
 
 void dumpDevices(){
-  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+  trc("dumpDevices list");
+  for(vector<BLEdeviceDisc>::iterator p = devices.begin(); p != devices.end(); ++p){
     trc(p->macAdr);
     trc(p->isDisc);
     trc(p->isWhtL);
     trc(p->isBlkL);
+    trc(p->devTyp);
   }
 }
 
@@ -104,31 +107,33 @@ void strupp(char* beg)
         ++beg;
 }
 
-#ifdef ZmqttDiscovery
 void MiFloraDiscovery(char * mac){
-  #define MiFloraparametersCount 4
   trc(F("MiFloraDiscovery"));
-  char * MiFlorasensor[MiFloraparametersCount][8] = {
-     {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
-     {"sensor", "MiFlora-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", ""} ,
-     {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
-     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-  
-  for (int i=0;i<MiFloraparametersCount;i++){
-   trc(F("CreateDiscoverySensor"));
-   trc(MiFlorasensor[i][1]);
-   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
-   String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
-   createDiscovery(MiFlorasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
-                    MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
-                    0,"","",true,"");
-  }
-  BLEdevice device;
+  #ifdef ZmqttDiscovery
+    #define MiFloraparametersCount 4
+    char * MiFlorasensor[MiFloraparametersCount][8] = {
+      {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
+      {"sensor", "MiFlora-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+      {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", ""} ,
+      {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+    };
+    
+    for (int i=0;i<MiFloraparametersCount;i++){
+    trc(F("CreateDiscoverySensor"));
+    trc(MiFlorasensor[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
+    createDiscovery(MiFlorasensor[i][0],
+                      (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
+                      will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
+                      MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
+                      0,"","",true,"");
+    }
+  #endif
+  BLEdeviceDisc device;
   strcpy( device.macAdr, mac );
+  strcpy( device.devTyp, "MIFLO");
   device.isDisc = true;
   device.isWhtL = false;
   device.isBlkL = false;
@@ -136,28 +141,31 @@ void MiFloraDiscovery(char * mac){
 }
 
 void MiJiaDiscovery(char * mac){
-  #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
-  char * MiJiasensor[MiJiaparametersCount][8] = {
-     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
-     {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
-     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-  
-  for (int i=0;i<MiJiaparametersCount;i++){
-   trc(F("CreateDiscoverySensor"));
-   trc(MiJiasensor[i][1]);
-   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
-   String unique_id = String(mac) + "-" + MiJiasensor[i][1];
-   createDiscovery(MiJiasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
-                    MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
-                    0,"","",true,"");
-  }
-  BLEdevice device;
+  #ifdef ZmqttDiscovery
+    #define MiJiaparametersCount 3
+    char * MiJiasensor[MiJiaparametersCount][8] = {
+      {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+      {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+      {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+    };
+    
+    for (int i=0;i<MiJiaparametersCount;i++){
+    trc(F("CreateDiscoverySensor"));
+    trc(MiJiasensor[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String unique_id = String(mac) + "-" + MiJiasensor[i][1];
+    createDiscovery(MiJiasensor[i][0],
+                      (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
+                      will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
+                      MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
+                      0,"","",true,"");
+    }
+  #endif
+  BLEdeviceDisc device;
   strcpy( device.macAdr, mac );
+  strcpy( device.devTyp, "MIJIA");
   device.isDisc = true;
   device.isWhtL = false;
   device.isBlkL = false;
@@ -165,28 +173,31 @@ void MiJiaDiscovery(char * mac){
 }
 
 void LYWSD02Discovery(char * mac){
-  #define LYWSD02parametersCount 3
   trc(F("LYWSD02Discovery"));
-  char * LYWSD02sensor[LYWSD02parametersCount][8] = {
-     {"sensor", "LYWSD02-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
-     {"sensor", "LYWSD02-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "LYWSD02-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
-     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-  
-  for (int i=0;i<LYWSD02parametersCount;i++){
-   trc(F("CreateDiscoverySensor"));
-   trc(LYWSD02sensor[i][1]);
-   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
-   String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
-   createDiscovery(LYWSD02sensor[i][0],
-                    (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
-                    LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
-                    0,"","",true,"");
-  }
-  BLEdevice device;
+  #ifdef ZmqttDiscovery
+    #define LYWSD02parametersCount 3
+    char * LYWSD02sensor[LYWSD02parametersCount][8] = {
+      {"sensor", "LYWSD02-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+      {"sensor", "LYWSD02-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+      {"sensor", "LYWSD02-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+    };
+    
+    for (int i=0;i<LYWSD02parametersCount;i++){
+    trc(F("CreateDiscoverySensor"));
+    trc(LYWSD02sensor[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
+    createDiscovery(LYWSD02sensor[i][0],
+                      (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
+                      will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
+                      LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
+                      0,"","",true,"");
+    }
+  #endif
+  BLEdeviceDisc device;
   strcpy( device.macAdr, mac );
+  strcpy( device.devTyp, "LYWSD");
   device.isDisc = true;
   device.isWhtL = false;
   device.isBlkL = false;
@@ -194,35 +205,42 @@ void LYWSD02Discovery(char * mac){
 }
 
 void CLEARGRASSTRHDiscovery(char * mac){
-  #define CLEARGRASSTRHparametersCount 3
   trc(F("CLEARGRASSTRHDiscovery"));
-  char * CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
-     {"sensor", "CLEARGRASSTRH-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
-     {"sensor", "CLEARGRASSTRH-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "CLEARGRASSTRH-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
-     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-  
-  for (int i=0;i<CLEARGRASSTRHparametersCount;i++){
-   trc(F("CreateDiscoverySensor"));
-   trc(CLEARGRASSTRHsensor[i][1]);
-   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
-   String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
-   createDiscovery(CLEARGRASSTRHsensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
-                    CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
-                    0,"","",true,"");
-  }
-  BLEdevice device;
+  #ifdef ZmqttDiscovery
+    #define CLEARGRASSTRHparametersCount 3
+    char * CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
+      {"sensor", "CLEARGRASSTRH-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+      {"sensor", "CLEARGRASSTRH-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+      {"sensor", "CLEARGRASSTRH-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+    };
+    
+    for (int i=0;i<CLEARGRASSTRHparametersCount;i++){
+    trc(F("CreateDiscoverySensor"));
+    trc(CLEARGRASSTRHsensor[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
+    createDiscovery(CLEARGRASSTRHsensor[i][0],
+                      (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
+                      will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
+                      CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
+                      0,"","",true,"");
+    }
+  #endif
+  BLEdeviceDisc device;
+  trc(F("mac"));
   strcpy( device.macAdr, mac );
+  trc(F("name"));
+  strcpy( device.devTyp, "CLEARG");
+  trc(F("others"));
   device.isDisc = true;
+    trc(F("others1"));
   device.isWhtL = false;
+    trc(F("others2"));
   device.isBlkL = false;
+    trc(F("others3"));
   devices.push_back(device);
 }
-
-#endif
 
   #ifdef ESP32
     /*
@@ -243,7 +261,168 @@ void CLEARGRASSTRHDiscovery(char * mac){
     
     //core on which the BLE detection task will run
     static int taskCore = 0;
+
+    //wifi or ble usage, as ESP32 has only one antenna we monitor the wifi or ble usage to avoid 2 tasks using both
+    unsigned long bleUseCount = 0;
+    
+        // the remote service we wish to connect to
+    static BLEUUID serviceUUID("00001204-0000-1000-8000-00805f9b34fb");
+
+    // the characteristic of the remote service we are interested in
+    static BLEUUID uuid_version_battery("00001a02-0000-1000-8000-00805f9b34fb");
+    static BLEUUID uuid_write_mode("00001a00-0000-1000-8000-00805f9b34fb");
+
+    BLEClient* getClient(BLEAddress Address) {
+      BLEClient* Client = BLEDevice::createClient();
+
+      if (!Client->connect(Address)) {
+        trc("- Connection failed, skipping");
+        return nullptr;
+      }
+
+      trc("- Connection successful");
+      return Client;
+    }
+
+    BLERemoteService* getService(BLEClient* Client) {
+      BLERemoteService* Service = nullptr;
+
+      try {
+        Service = Client->getService(serviceUUID);
+      }
+      catch (...) {
+        // something went wrong
+      }
+      if (Service == nullptr) {
+        trc("- Failed to find data service");
+      }
+      else {
+        trc("- Found data service");
+      }
+
+      return Service;
+    }
+
+    bool forceServiceDataMode(BLERemoteService* Service) {
+      BLERemoteCharacteristic* Characteristic;
       
+      // get device mode characteristic, needs to be changed to read data
+      trc("- Force device in data mode");
+      Characteristic = nullptr;
+      try {
+        Characteristic = Service->getCharacteristic(uuid_write_mode);
+      }
+      catch (...) {
+        // something went wrong
+      }
+      if (Characteristic == nullptr) {
+        trc("-- Failed, skipping device");
+
+        return false;
+      }
+
+      // write the magic data
+      uint8_t buf[2] = {0xA0, 0x1F};
+      Characteristic->writeValue(buf, 2, true);
+
+      delay(500);
+      return true;
+    }
+
+    int readFloraBatteryCharacteristic(BLERemoteService* Service) {
+      BLERemoteCharacteristic* Characteristic = nullptr;
+      int batteryValue = -1;
+      // get the device battery characteristic
+      trc("- Access battery characteristic from device");
+      try {
+        Characteristic = Service->getCharacteristic(uuid_version_battery);
+      }
+      catch (...) {
+        // something went wrong
+      }
+      if (Characteristic == nullptr) {
+        trc("-- Failed, skipping battery level");
+
+        return batteryValue;
+      }
+
+      // read characteristic value
+      trc("- Read value from characteristic");
+      std::string value;
+      try{
+        value = Characteristic->readValue();
+      }
+      catch (...) {
+        // something went wrong
+
+        trc("-- Failed, skipping battery level");
+        return batteryValue;
+      }
+      const char *val2 = value.c_str();
+      batteryValue = val2[0];
+
+      char buffer[64];
+
+      trc("-- Battery: ");
+      trc(batteryValue);
+      snprintf(buffer, 64, "%d", batteryValue);
+
+      return batteryValue;
+    }
+
+    bool processService(BLERemoteService* Service, char* deviceMacAddress) {
+
+      trc("Processing  service");
+      // set device in data mode
+      if (!forceServiceDataMode(Service)) {
+        return false;
+      }
+
+      int batteryValue;
+
+      batteryValue = readFloraBatteryCharacteristic(Service);
+      if(batteryValue != -1){
+        trc(F("Creating BLE buffer"));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& BLEdata = jsonBuffer.createObject();
+        BLEdata.set("batt", (int)batteryValue);
+        String mac_adress = String(deviceMacAddress);
+        mac_adress.replace(":","");
+        String mactopic = subjectBTtoMQTT + mac_adress;
+        pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
+        return true;
+      }else{
+        return false;
+      }
+
+    }
+
+    bool processDevice(BLEAddress Address, char* deviceMacAddress) {
+      trc("Processing  device at ");
+      trc(deviceMacAddress);
+
+      // connect to  ble server
+      BLEClient* Client = getClient(Address);
+      if (Client == nullptr) {
+        return false;
+      }
+        trc("get service");
+      // connect data service
+      BLERemoteService* Service = getService(Client);
+      if (Service == nullptr) {
+        Client->disconnect();
+        return false;
+      }
+        trc("process data");
+      // process devices data
+      bool success = processService(Service, deviceMacAddress);
+        trc("disconnect");
+      // disconnect from device
+      Client->disconnect();
+
+      return success;
+    }
+
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
       void onResult(BLEAdvertisedDevice advertisedDevice) {
         trc(F("Creating BLE buffer"));
@@ -253,6 +432,10 @@ void CLEARGRASSTRHDiscovery(char * mac){
         BLEdata.set("id", (char *)mac_adress.c_str());
         mac_adress.replace(":","");
         mac_adress.toUpperCase();
+        String mac_adress_upper = mac_adress;
+        BLEAddress Address((char *)mac_adress_upper.c_str());
+        mac_adress.replace(":","");
+
         String mactopic = subjectBTtoMQTT + mac_adress;
         char mac[mac_adress.length()+1];
         mac_adress.toCharArray(mac,mac_adress.length()+1);
@@ -297,18 +480,14 @@ void CLEARGRASSTRHDiscovery(char * mac){
                   if (pos != -1){
                     trc(F("mi flora data reading"));
                     //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiFloraDiscovery(mac);
-                    #endif
+                    //if(!isDiscovered(mac)) MiFloraDiscovery(mac);
                     process_data(pos - 24,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"20aa01");
                   if (pos != -1){
                     trc(F("mi jia data reading"));
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiJiaDiscovery(mac);
-                    #endif
+                    //if(!isDiscovered(mac)) MiJiaDiscovery(mac);
                     process_data(pos - 26,service_data,mac);
                   }
                   pos = -1;
@@ -316,9 +495,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                   if (pos != -1){
                     trc(F("LYWSD02 data reading"));
                     //example "servicedata":"70205b04b96ab883c8593f09041002e000"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) LYWSD02Discovery(mac);
-                    #endif
+                    //if(!isDiscovered(mac)) LYWSD02Discovery(mac);
                     process_data(pos - 24,service_data,mac);
                   }
                   pos = -1;
@@ -326,9 +503,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                   if (pos != -1){
                     trc(F("ClearGrass T RH data reading"));
                     //example "servicedata":"5030470340743e10342d58041002d6000a100164"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
-                    #endif
+                    //if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
                     process_data(pos - 26,service_data,mac);
                   }
                   }
@@ -339,11 +514,13 @@ void CLEARGRASSTRHDiscovery(char * mac){
         }else{
           trc(F("Filtered mac device"));
         }
+        dumpDevices();
       }
     };
 
     void BLEscan(){
-            
+      taskInProgress = true;
+      bleUseCount++;
       TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
       TIMERG0.wdt_feed=1;
       TIMERG0.wdt_wprotect=0;
@@ -354,11 +531,27 @@ void CLEARGRASSTRHDiscovery(char * mac){
       pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
       pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
       BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+      taskInProgress = false;
     }   
+
+    void BLEread(){
+      taskInProgress = true;
+      TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
+      TIMERG0.wdt_feed=1;
+      TIMERG0.wdt_wprotect=0;
+
+      BLEDevice::init("");
+      BLEDevice::setPower(ESP_PWR_LVL_P7);
+      trc(F("mi flora battery reading"));
+      String mac_adress_upper = "C4:7C:8D:65:B6:63";
+      BLEAddress Address((char *)mac_adress_upper.c_str());
+      processDevice(Address,(char *)mac_adress_upper.c_str() );
+      taskInProgress = false;
+    }
 
     void coreTask( void * pvParameters ){
 
-    String taskMessage = "BT Task running on core ";
+    String taskMessage = "BLEscan running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
 
       while(true){
@@ -367,25 +560,50 @@ void CLEARGRASSTRHDiscovery(char * mac){
           BLEscan();
       }
     }
+
+    void coreTask2( void * pvParameters ){
+
+    String taskMessage = "BLEread running on core ";
+    taskMessage = taskMessage + xPortGetCoreID();
+
+      while(true){
+          trc(taskMessage); 
+          delay(TimeBtw_Reads);
+          BLEread();
+      }
+    }
   
     void setupBT(){
-        BLEinterval = TimeBtw_Read;
+        BLEinterval = TimeBtw_Scans;
         trc(F("BLEinterval btw scans"));
         trc(BLEinterval);
+        trc(F("BLEinterval btw reads"));
+        trc(TimeBtw_Reads);
         // we setup a task with priority one to avoid conflict with other gateways
-        xTaskCreatePinnedToCore(
+          xTaskCreatePinnedToCore(
                           coreTask,   /* Function to implement the task */
                           "coreTask", /* Name of the task */
                           10000,      /* Stack size in words */
                           NULL,       /* Task input parameter */
-                          1,          /* Priority of the task */
+                          2,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
+          xTaskCreatePinnedToCore(
+                          coreTask2,   /* Function to implement the task */
+                          "coreTask2", /* Name of the task */
+                          10000,      /* Stack size in words */
+                          NULL,       /* Task input parameter */
+                          1,          /* Priority of the task */
+                          NULL,       /* Task handle. */
+                          taskCore );  /* Core where the task should run */
           trc(F("ZgatewayBT multicore ESP32 setup done "));
     }   
 
     bool BTtoMQTT(){ // for on demand BLE scans
-      BLEscan();
+      #ifndef ESP32
+        BLEscan();
+      #endif
+
     }
   #else // arduino or ESP8266 working with HM10/11
 
@@ -406,7 +624,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
     struct decompose d[6] = {{"mac",16,12,true},{"typ",28,2,false},{"rsi",30,2,false},{"rdl",32,2,false},{"sty",44,4,true},{"rda",34,60,false}};
     
     void setupBT() {
-      BLEinterval = TimeBtw_Read;
+      BLEinterval = TimeBtw_Scans;
       trc(F("BLEinterval btw scans"));
       trc(BLEinterval);
       softserial.begin(9600);

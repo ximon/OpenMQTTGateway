@@ -32,7 +32,8 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
 #define subjectMQTTtoBTset  Base_Topic Gateway_Name "/commands/MQTTtoBT/set"
-#define TimeBtw_Read 55555 //define default time between 2 scans
+#define TimeBtw_Scans 55555 //define default time between 2 scans
+#define TimeBtw_Reads 777777 //define default time between 2 reading of value by connecting to the device
 #define Scan_duration 10 //define the time for a scan
 #define HM-10
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
@@ -46,11 +47,12 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 
 unsigned int BLEinterval ; //time between 2 scans
 
-struct BLEdevice{
+struct BLEdeviceDisc{
   char macAdr[13];
   bool isDisc;
   bool isWhtL;
   bool isBlkL;
+  char devTyp[6];
 };
 
 struct decompose{
