@@ -1,27 +1,38 @@
-[![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
-[![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
-[![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
-[![Download count](https://img.shields.io/github/downloads/1technophile/OpenMQTTGateway/total.svg)](https://github.com/1technophile/OpenMQTTGateway/releases)
-[![HitCount](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway.svg)](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway)
+# Overview
+OpenMQTTGateway project goal is to concentrate in one gateway different technologies, decreasing by the way the number of proprietary gateways needed and hiding the different technologies singularity behind a simple & wide spread communication protocol; [MQTT](http://mqtt.org/).
 
-**Questions, support please don't open an issue, go first to the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
+OpenMQTTGateway support very mature technologies like basic 433mhz/315mhz protocols & infrared so as to make your old dumb devices "smart" and avoid you to throw then away. These devices have also the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
+And support also up to date technologies like Bluetooth Low Energy or LORA.
 
-# OpenMQTTGateway
-[![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
+To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switchs & weather stations you can take a look to the 
+[compatible devices list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079)
 
-To know the main functions of the gateway see below
-https://1technophile.github.io/OpenMQTTGateway/
+With MQTT you can connect the compatible software you want, it can be an home automation controller (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or another software like Node-Red.
 
-Download OpenMQTTGateway from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
+![Overview](img/OpenMQTTGateway.png)
 
-The reference sheet, with the list of all functions, pinouts is [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=0)
+# Use cases
+With OpenMQTTGateway and a controller you can for example:
+* Monitor your garden with a Mi Flora sensor and control an irrigation valve depending on the soil moisture,
+* Trigger a fan depending on the temperature and humidity thanks to a Mi Jia sensor,
+* Alert yourself by a controller notification if the temperature of your fridge is too high,
+* Detect your beacon/smartwatch so as to trigger a special scenario when you come home,
+* Detect opened door or windows and alert yourself when leaving home
+* Detect water leakage or smoke
+* Actionate a siren if something is going wrong
 
-A list of supported 433mhz devices (and others) is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
+The limit is your imagination 😀
 
-A list of compatible components to build your gateway is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277), nodemcu, esp32, emitters and receivers...
+!> **The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the informations and materials given it is at your own risk.I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this blog.**
+
+# Functions
+Behind the scene you will find functionnalities dedicated to gateways like:
+* Deduplication
+* Simple and lite API
+* Strong integrations with libraries used
+* Signal forward/repeat
+* First configuration with web portal
+* Whitelist & Blacklist management
 
 If you want to buy a coffee or other beverage so as to give me some support, here is a way to do it : 
-
 <a href="https://www.buymeacoffee.com/1technophile" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
