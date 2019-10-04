@@ -1,8 +1,9 @@
 
 Note that for the moment RF, RF2 and Pilight can not be activated on the same boards together.
 
-# RF gateway
-## Receiving data from RF signal
+## RF gateway
+
+### Receiving data from RF signal
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
 
@@ -12,7 +13,7 @@ Generate your RF signals by pressing a remote button or other and you should see
 
 `home/OpenMQTTGateway/433toMQTT {"value":1315156,"protocol":1,"length":24,"delay":317}`
 
-## Send data by MQTT to convert it on RF signal 
+### Send data by MQTT to convert it on RF signal 
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156}'`
 
@@ -28,7 +29,7 @@ Arduino IDE serial data received when receiving data by 433Mhz
 
 ![](../img/OpenMQTTGateway_serial2.jpg)
 
-## Send data by MQTT with advanced RF parameters
+### Send data by MQTT with advanced RF parameters
 
 RF sending support three advanced parameters; bits length, RF protocol and RF pulselength
 if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
@@ -41,20 +42,20 @@ Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315}'`
 will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24
 
-## Repeat the RF signal OpenMQTTGateway receive
+### Repeat the RF signal OpenMQTTGateway receive
 So as to repeat the RF signal received by the gateway once set the following parameter to true in config_RF.h
 
 `#define repeatRFwMQTT true`
 
-## Repeat the RF signal several times
+### Repeat the RF signal several times
 You can add a "repeat" key/value to the MQTTto433 JSON message to override the default number of repeats.
 
 Example:
 `home/OpenMQTTGateway/commands/MQTTto433 {"value":1315156,"protocol":1,"length":24,"delay":317, "repeat":10}`
 
-# Pilight gateway
+## Pilight gateway
 
-## Receiving data from RF signal
+### Receiving data from RF signal
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
 
@@ -64,7 +65,7 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
-## Send data by MQTT to convert it on RF signal 
+### Send data by MQTT to convert it on RF signal 
 **ON**
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"message":"{\"systemcode\":12,\"unitcode\":22,\"on\":1}","protocol":"elro_400_switch"}'`
@@ -75,8 +76,8 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 Theses commands will send by RF the signals to actuate an elro_400 switch
 
-# RF with SONOFF RF BRIDGE
-## Receiving data from RF signal
+## RF with SONOFF RF BRIDGE
+### Receiving data from RF signal
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
 
@@ -93,7 +94,7 @@ OpenMQTTGateway process the raw value to extract the other decimal values that c
 
 NOTE: currently the device doesn't receive correct values from Switches remote control
 
-## Send data by MQTT to convert it on RF signal 
+### Send data by MQTT to convert it on RF signal 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSRFB" -m '{"value":1315156}'`
 
 This command will send by RF the code 1315156 and use the default parameters:
@@ -102,7 +103,7 @@ Low time= 320
 High time= 900
 SYNC = 9500
 
-## Send data by MQTT with advanced RF parameters
+### Send data by MQTT with advanced RF parameters
 
 RF bridge sending support four advanced parameters; Repeat, Low time, High time & Sync
 if you want to repeat your signal sending put into your json payload "repeat":2, 2 means 2 repetitions of signal
@@ -120,14 +121,14 @@ will make RF Bridge send a signal with the use of listed parameters 315, 845, 91
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSRFB/Raw -m '{"raw":"267A013603B6140551"}'`
 will make RF Bridge send a signal with the use of advanced parameters defined in the raw string
 
-# RF2 gateway KAKU
+## RF2 gateway KAKU
 RF2 gateway enables to send command to RF devices with the KAKU protocol. DIO chacon devices are an example.
 It uses the same pinout as the RF gateway and both gateways can be used on the same setup.
 
 Receiving RF codes with the KAKU protocol is not compatible with ZgatewayRF , so as to get the code of your remotes you should comment ZgatewayRF in user_config.h.
 Transmitting can be done with both ZgatewayRF and ZgatewayRF2
 
-## Receiving data from KAKU signal
+### Receiving data from KAKU signal
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
 

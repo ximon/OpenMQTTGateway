@@ -1,5 +1,4 @@
-## Compatible Modules
-
+## Compatible parts
 |Module|Purpose|Where to Buy|
 |-|-|-|
 |SRX882 (recommended)|433Mhz Receiver|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|

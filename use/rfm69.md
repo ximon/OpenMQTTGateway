@@ -1,7 +1,7 @@
 
 The RFM69 gateway enables to send and receive signal from/to another RFM69 module. It is based on the work of @bbx10 https://github.com/bbx10/nanohab
 
-## Receiving data from RFM signal
+### Receiving data from RFM signal
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
 
