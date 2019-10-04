@@ -17,9 +17,9 @@
   - [From PlatformIO 👨‍🎓](upload/pio)
 - **4 - Use ✈️**
   - [RF](use/rf)
-    - [RF](#rf-gateway)
-    - [Pilight](#pilight-gateway)
-    - [RF2](#rf2-gateway-kaku)
+    - [RF](use/rf#rf-gateway)
+    - [Pilight](use/rf#pilight-gateway)
+    - [RF2](use/rf#rf2-gateway-kaku)
   - [BLE](use/ble)
   - [IR](use/ir)
   - [LORA](use/lora)
