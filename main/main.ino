@@ -698,8 +698,7 @@ void forceWifiProtocol() {
 }
 
 void reinit_wifi() {
-  WiFi.mode(WIFI_OFF);
-  delay(1000);
+  delay(10);
   WiFi.mode(WIFI_STA);
   if (wifiProtocol) forceWifiProtocol();
   WiFi.begin();
@@ -733,7 +732,7 @@ void disconnection_handling(int failure_number) {
 #  endif
     Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG + ATTEMPTS_BEFORE_ESP_RESET))) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
   {
 #  ifdef ESP32
     wifiProtocol = 0;
@@ -742,6 +741,13 @@ void disconnection_handling(int failure_number) {
 #  endif
     Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
     reinit_wifi();
+  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG + ATTEMPTS_BEFORE_ESP_RESET)){
+    Log.warning(F("Max limit of disconnection over, ESP reset" CR));
+#  if defined(ESP8266)
+    ESP.reset();
+#  else
+    ESP.restart();
+#  endif
   }
 }
 
@@ -1284,9 +1290,9 @@ void loop() {
   } else { // disconnected from network
     Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_INFO, LED_INFO_ON);
-    delay(5000); // add a delay to avoid ESP32 crash and reset
+    delay(1000); // add a delay to avoid ESP32 crash and reset
     digitalWrite(LED_INFO, !LED_INFO_ON);
-    delay(5000);
+    delay(1000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
     Log.warning(F("wifi" CR));
     failure_number_ntwk++;

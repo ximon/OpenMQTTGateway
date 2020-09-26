@@ -169,9 +169,10 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 #  endif
 #endif
 
-#if defined(ESP8266) || defined(ESP32)
-#  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
-#  define ATTEMPTS_BEFORE_B  20 // Number of wifi connection attempts before going to B protocol
+#if defined(ESP8266) || defined(ESP32) // the numbers below are cumulated
+#  define ATTEMPTS_BEFORE_BG        10 // Number of wifi connection attempts before going to BG protocol
+#  define ATTEMPTS_BEFORE_B         10 // Number of wifi connection attempts before going to B protocol
+#  define ATTEMPTS_BEFORE_ESP_RESET 10 // Number of wifi connection attempts before going to RESET
 #endif
 
 /*------------------DEEP SLEEP parameters ------------------*/
