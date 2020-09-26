@@ -698,7 +698,8 @@ void forceWifiProtocol() {
 }
 
 void reinit_wifi() {
-  delay(10);
+  WiFi.mode(WIFI_OFF);
+  delay(1000);
   WiFi.mode(WIFI_STA);
   if (wifiProtocol) forceWifiProtocol();
   WiFi.begin();
