@@ -47,7 +47,7 @@ bool zBLEConnect::readData(BLEAction* action) {
   NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
 
   if (pChar && pChar->canRead()) {
-    action->value = pChar->readValue();
+    action->value = std::string((const char*) NimBLEUtils::buildHexData(NULL, (uint8_t*)pChar->readValue().data(), pChar->readValue().length()));
     if (action->value != "") {
       return true;
     }
