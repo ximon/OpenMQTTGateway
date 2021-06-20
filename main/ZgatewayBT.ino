@@ -1709,8 +1709,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   } else {
     return;
   }
-  const char* mac = BTdata["ble_read_address"].as<const char*>();
-  createOrUpdateDevice(mac, device_flags_connect, GENERIC);
+  createOrUpdateDevice(action.addr, device_flags_connect, GENERIC);
   BLEactions.push_back(action);
 #  endif
 }
