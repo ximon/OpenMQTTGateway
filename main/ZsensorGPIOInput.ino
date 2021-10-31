@@ -28,69 +28,86 @@
 */
 #include "User_config.h"
 
+#define GPIO_Count 2
+
+int input_GPIOs[GPIO_COUNT] = [INPUT_GPIO, 3];
+char* input_GPIO_names[GPIO_COUNT] = ["gpio1","gpio2"];
+
 #ifdef ZsensorGPIOInput
 #  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
-unsigned long resetTime = 0;
+unsigned long resetTimes[GPIO_Count] = [0,0];
 #  endif
-unsigned long lastDebounceTime = 0;
-int InputState = 3; // Set to 3 so that it reads on startup
-int lastInputState = 3;
+
+unsigned long lastDebounceTimes[GPIO_Count] = [0,0];
+int InputStates[GPIO_Count] = [3,3]; // Set to 3 so that it reads on startup
+int lastInputStates[GPIO_Count] = [3,3];
 
 void setupGPIOInput() {
-  Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
-  pinMode(INPUT_GPIO, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+
+  for (int i = 0; i < GPIO_Count; i++) {
+    Log.notice(F("Reading GPIO at pin: %d" CR), input_GPIOs[i];
+    pinMode(input_GPIOs[i], INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+  }
 }
 
-void MeasureGPIOInput() {
-  int reading = digitalRead(INPUT_GPIO);
+
+void MeasureGPIOInput(gpioIndex) {
+  int reading = digitalRead(input_GPIOs[gpioIndex]);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != lastInputState) {
+  if (readings[gpioIndex] != lastInputStates[gpioIndex]) {
     // reset the debouncing timer
-    lastDebounceTime = millis();
+    lastDebounceTimes[gpioIndex] = millis();
   }
 
-  if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay) {
+  if (reading != lastInputStates[gpioIndex]) {
+    // reset the debouncing timer
+    lastDebounceTimes[gpioIndex] = millis();
+  }
+
+
+  if ((millis() - lastDebounceTimes[gpioIndex]) > GPIOInputDebounceDelay) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 #  if defined(ESP8266) || defined(ESP32)
     yield();
 #  endif
-#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+
+#  if defined(TRIGGER_GPIO) && input_GPIO == TRIGGER_GPIO
     if (reading == LOW) {
-      if (resetTime == 0) {
-        resetTime = millis();
-      } else if ((millis() - resetTime) > 10000) {
+      if (resetTimes[gpioIndex] == 0) {
+        resetTimes[gpioIndex] = millis();
+      } else if ((millis() - resetTimes[gpioIndex]) > 10000) {
         Log.trace(F("Button Held" CR));
         Log.notice(F("Erasing ESP Config, restarting" CR));
         setup_wifimanager(true);
       }
     } else {
-      resetTime = 0;
+      resetTime[gpioIndex] = 0;
     }
 #  endif
     // if the Input state has changed:
-    if (reading != InputState) {
-      InputState = reading;
+    if (reading != InputStates[gpioIndex]) {
+      InputStates[gpioIndex] = reading;
       Log.trace(F("Creating GPIOInput buffer" CR));
       const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
       StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject GPIOdata = jsonBuffer.to<JsonObject>();
       if (InputState == HIGH) {
-        GPIOdata["gpio"] = "HIGH";
+        GPIOdata[input_GPIO_names[gpioIndex]] = "HIGH";
       }
       if (InputState == LOW) {
-        GPIOdata["gpio"] = "LOW";
+        GPIOdata[input_GPIO_names[gpioIndex]] = "LOW";
       }
       if (GPIOdata.size() > 0)
         pub(subjectGPIOInputtoMQTT, GPIOdata);
 
 #  ifdef ZactuatorONOFF
-      if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
+      if (InputState_1 == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
         ActuatorButtonTrigger();
       }
 #  endif
@@ -98,6 +115,6 @@ void MeasureGPIOInput() {
   }
 
   // save the reading. Next time through the loop, it'll be the lastInputState:
-  lastInputState = reading;
+  lastInputStates[gpioIndex] = reading;
 }
 #endif
